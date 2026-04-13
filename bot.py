@@ -19,7 +19,7 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
         "💠 Dear users!\n\n"
         "🚀 JOIN OUR OFFICIAL BOT FIRST!\n"
         "🤖 Buy Cards Instantly:\n"
-        "👉 <a href='https://t.me/vanilla_cards_bot'>@vanilla_cards_bot</a> — Type /start\n"
+        "👉 <a href='https://t.me/vanila_card_bot'>@vanila_card_bot</a> — Type /start\n"
         "🔔 Get Instant Support: <a href='https://t.me/Vanila_card_prepaid'>https://t.me/Vanila_card_prepaid</a>\n"
         "⚡ Early Join = Early Access\n"
         "🔥 Don’t Miss The Best Cards !"
@@ -30,7 +30,7 @@ async def handle_other_messages(update: Update, context: ContextTypes.DEFAULT_TY
     msg = update.message.text.strip() if update.message.text else ""
     if CARD_REGEX.match(msg):
         await update.message.reply_text(
-            "You can't check the card because you're not a member of @vanilla_cards_bot"
+            "You can't check the card because you're not a member of @vanila_card_bot"
         )
         return
 
@@ -61,7 +61,6 @@ def run_flask():
 
 # ---------- মেইন ফাংশন (অ্যাসিন্ক) ----------
 async def main():
-    # ইভেন্ট লুপ ঠিক করার জন্য (Python 3.14 এ প্রয়োজন)
     try:
         loop = asyncio.get_running_loop()
     except RuntimeError:
@@ -77,19 +76,15 @@ async def main():
         )
     )
 
-    # Flask হেলথ চেক আলাদা থ্রেডে চালান
     flask_thread = threading.Thread(target=run_flask, daemon=True)
     flask_thread.start()
 
-    # বট চালু (লং পোলিং)
     await application.initialize()
     await application.start()
     await application.updater.start_polling()
-    # বট চালু থাকার জন্য সিগন্যাল ওয়েট
     stop_signal = asyncio.Event()
     await stop_signal.wait()
 
 # ---------- এন্ট্রি পয়েন্ট ----------
 if __name__ == "__main__":
-    # পাইথন ৩.১৪ এর জন্য নতুন ইভেন্ট লুপ নীতি
     asyncio.run(main())
